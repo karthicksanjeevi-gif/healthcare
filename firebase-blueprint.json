@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "Patient": {
+      "title": "Patient",
+      "description": "Patient registered by a doctor for home treatment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The custom document ID of the patient" },
+        "name": { "type": "string", "description": "Patient's full name" },
+        "email": { "type": "string", "format": "email", "description": "Gmail/Email of the patient" },
+        "doctorId": { "type": "string", "description": "The UID of the doctor managing this patient" },
+        "doctorName": { "type": "string", "description": "Name of the doctor" },
+        "doctorEmail": { "type": "string", "description": "Email of the doctor" },
+        "treatment": { "type": "string", "description": "Details of the home treatment plan" },
+        "registeredAt": { "type": "string", "format": "date-time", "description": "When the patient was registered" },
+        "status": { "type": "string", "enum": ["active", "completed"], "description": "Status of the treatment" },
+        "tablets": {
+          "type": "array",
+          "description": "List of scheduled tablets"
+        },
+        "adherenceLogs": {
+          "type": "array",
+          "description": "Logs when the patient took their tablets"
+        }
+      },
+      "required": ["id", "name", "email", "doctorId", "treatment", "registeredAt", "status", "tablets"]
+    },
+    "SymptomReport": {
+      "title": "SymptomReport",
+      "description": "Alert or symptom/side-effect email notification sent by patient to doctor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique document ID" },
+        "patientId": { "type": "string", "description": "Patient ID trigger" },
+        "patientName": { "type": "string", "description": "Patient name" },
+        "patientEmail": { "type": "string", "description": "Patient email" },
+        "doctorId": { "type": "string", "description": "Doctor's ID" },
+        "doctorEmail": { "type": "string", "description": "Doctor's email address" },
+        "subject": { "type": "string", "description": "Subject of the message" },
+        "symptoms": { "type": "string", "description": "Symptom description or transcription from chatbot" },
+        "imageUrl": { "type": "string", "description": "URL or base64 format of the symptom photo copy" },
+        "sentAt": { "type": "string", "format": "date-time", "description": "When the notification was sent" },
+        "isRead": { "type": "boolean", "description": "Whether doctor has viewed this alert" }
+      },
+      "required": ["id", "patientId", "patientName", "doctorId", "doctorEmail", "subject", "symptoms", "sentAt", "isRead"]
+    }
+  },
+  "firestore": {
+    "patients/{patientId}": {
+      "schema": "Patient",
+      "description": "All registered home treatment patients"
+    },
+    "symptomReports/{reportId}": {
+      "schema": "SymptomReport",
+      "description": "Reports and email logs of patient symptoms/side-effects"
+    }
+  }
+}

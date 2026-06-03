@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Custom ID validator helper
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper to validate patient structure
+    function isValidPatient(data) {
+      return (!('id' in data) || data.id is string)
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 100
+        && data.email is string
+        && data.doctorId is string
+        && data.treatment is string
+        && data.status in ['active', 'completed'];
+    }
+
+    // Helper to validate symptom report structure
+    function isValidSymptomReport(data) {
+      return (!('id' in data) || data.id is string)
+        && data.patientId is string
+        && data.patientName is string
+        && data.doctorId is string
+        && data.doctorEmail is string
+        && data.subject is string
+        && data.symptoms is string
+        && data.isRead is bool;
+    }
+
+    // Patients rules
+    match /patients/{patientId} {
+      allow get: if isValidId(patientId);
+      
+      allow list: if isSignedIn() 
+        && resource.data.doctorId == request.auth.uid;
+
+      allow create: if isSignedIn() 
+        && isValidPatient(incoming())
+        && incoming().doctorId == request.auth.uid;
+
+      allow update: if (
+        // Doctor can update everything
+        (isSignedIn() && isValidPatient(incoming()) && incoming().doctorId == request.auth.uid) ||
+        // Patient can only update adherence logs
+        (isValidId(patientId) && incoming().diff(existing()).affectedKeys().hasOnly(['adherenceLogs']))
+      );
+
+      allow delete: if isSignedIn() 
+        && existing().doctorId == request.auth.uid;
+    }
+
+    // Symptom Reports rules
+    match /symptomReports/{reportId} {
+      allow get: if isValidId(reportId) && (
+        (isSignedIn() && resource.data.doctorId == request.auth.uid) ||
+        true // Also allow patient link to get if needed
+      );
+
+      allow list: if isSignedIn() 
+        && resource.data.doctorId == request.auth.uid;
+
+      allow create: if isValidSymptomReport(incoming());
+
+      allow update: if isSignedIn() 
+        && existing().doctorId == request.auth.uid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['isRead']);
+
+      allow delete: if isSignedIn() 
+        && existing().doctorId == request.auth.uid;
+    }
+  }
+}

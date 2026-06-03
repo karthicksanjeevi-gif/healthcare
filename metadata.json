@@ -1,0 +1,10 @@
+{
+  "name": "Doctor Patient Home Treatment Manager",
+  "description": "A full-stack medical application for doctors to register patients on home treatment, send access links, set tablet schedules, track medicine adherence, and provide a Gemini AI multimodal chatbot for symptom, side effect, and tablet scanning with direct email reporting.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
